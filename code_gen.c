@@ -684,9 +684,6 @@ generate_expr(Expr * expr, State * state)
 	    case EXPR_PROP:
 		op = OP_GET_PROP;
 		break;
-	    case EXPR_INDEX:
-		op = OP_REF;
-		break;
 	    default:
 		panic("Not a binary operator in GENERATE_EXPR()");
 	    }
@@ -1357,6 +1354,11 @@ char rcsid_code_gen[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.9  1999/08/14 19:44:15  bjj
+ * Code generator will no longer PUSH_CLEAR things like dobj/dobjstr/prepstr
+ * around CALL_VERB operations, since those variables are passed directly
+ * from one environment to the next.
+ *
  * Revision 1.8  1999/08/12 05:40:09  bjj
  * Consider OP_FORK a nonlocal goto so that no variables are undefined
  * when it happens (the saved environment has to be complete for the forked
