@@ -1235,6 +1235,8 @@ main(int argc, char **argv)
     if (!db_load())
 	exit(1);
 
+    load_server_options();
+
     SRANDOM(time(0));
 
     parent_pid = getpid();
@@ -1734,6 +1736,9 @@ register_server(void)
 char rcsid_server[] = "$Id$";
 
 /* $Log$
+ * Revision 1.2  1997/03/03 04:19:24  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:01  nop
  * LambdaMOO 1.8.0p5
  *
