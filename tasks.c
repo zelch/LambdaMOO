@@ -725,6 +725,17 @@ enqueue_input_task(tqueue * tq, const char *input, int at_front)
     }
 }
 
+void
+task_suspend_input(task_queue q)
+{
+    tqueue *tq = q.ptr;
+
+    if (!tq->input_suspended && tq->connected) {
+	server_suspend_input(tq->player);
+	tq->input_suspended = 1;
+    }
+}
+
 static void
 flush_input(tqueue * tq, int show_messages)
 {
@@ -2013,6 +2024,9 @@ char rcsid_tasks[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.10  2002/09/15 23:21:01  xplat
+ * GNU indent normalization.
+ *
  * Revision 1.9  2001/07/31 06:33:22  bjj
  * Fixed some bugs in the reporting of forked task sizes.
  *
