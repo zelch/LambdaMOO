@@ -302,7 +302,11 @@ reenable_timers(void)
 
 char rcsid_timers[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:19:33  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:01  nop
  * LambdaMOO 1.8.0p5
  *

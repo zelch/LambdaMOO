@@ -456,7 +456,11 @@ register_functions(void)
 
 char rcsid_functions[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.4  1997/07/07 03:24:54  nop
+ * Merge UNSAFE_OPTS (r5) after extensive testing.
+ * 
  * Revision 1.3.2.2  1997/05/12 04:03:21  bjj
  * This time for sure!
  *

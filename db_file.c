@@ -720,7 +720,11 @@ db_shutdown()
 
 char rcsid_db_file[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.3  1998/02/19 07:36:16  nop
+ * Initial string interning during db load.
+ *
  * Revision 1.2  1997/03/03 04:18:27  nop
  * GNU Indent normalization
  *

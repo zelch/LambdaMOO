@@ -1137,7 +1137,11 @@ register_list(void)
 
 char rcsid_list[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.4  1997/07/07 03:24:54  nop
+ * Merge UNSAFE_OPTS (r5) after extensive testing.
+ * 
  * Revision 1.3.2.3  1997/07/03 08:04:01  bjj
  * Pattern cache was not storing case_matters flag, causing many patterns to
  * be impossible to find in the cache.

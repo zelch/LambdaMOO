@@ -21,7 +21,11 @@
 extern Stmt *decompile_program(Program * program, int vector);
 extern int find_line_number(Program * program, int vector, int pc);
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:18:33  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:02  nop
  * LambdaMOO 1.8.0p5
  *

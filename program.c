@@ -114,7 +114,11 @@ free_program(Program * p)
 
 char rcsid_program[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.4  1997/07/07 03:24:54  nop
+ * Merge UNSAFE_OPTS (r5) after extensive testing.
+ * 
  * Revision 1.3.2.1  1997/06/05 09:00:00  bjj
  * Cache one pc/lineno pair with each Program.  Hopefully most programs that
  * fail multiple times usually do it on the same line!

@@ -679,7 +679,11 @@ dbpriv_fix_properties_after_chparent(Objid oid, Objid old_parent)
 
 char rcsid_db_properties[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:18:31  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:44:59  nop
  * LambdaMOO 1.8.0p5
  *

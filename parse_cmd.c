@@ -251,7 +251,11 @@ free_parsed_command(Parsed_Command * pc)
 
 char rcsid_parse_cmd[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.3  1997/07/07 03:24:54  nop
+ * Merge UNSAFE_OPTS (r5) after extensive testing.
+ * 
  * Revision 1.2.2.2  1997/05/30 18:36:17  nop
  * Oops, make sure to free words as M_STRING_PTRS, not M_STRING.  I crashed
  * LambdaMOO for the first time with this!

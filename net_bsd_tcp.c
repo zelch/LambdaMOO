@@ -279,7 +279,11 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
 
 char rcsid_net_bsd_tcp[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:19:02  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:02  nop
  * LambdaMOO 1.8.0p5
  *

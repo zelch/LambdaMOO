@@ -65,7 +65,11 @@ ES_RaiseException(Exception * exception, int value)
 
 char rcsid_exceptions[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:18:37  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:44:59  nop
  * LambdaMOO 1.8.0p5
  *

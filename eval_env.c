@@ -123,7 +123,12 @@ set_rt_env_var(Var * env, int slot, Var v)
 
 char rcsid_rt_env[] = "$Id$";
 
-/* $Log$
+
+/* 
+ * $Log$
+ * Revision 1.4  1997/07/07 03:24:53  nop
+ * Merge UNSAFE_OPTS (r5) after extensive testing.
+ *
  * Revision 1.3.2.1  1997/03/20 18:07:50  bjj
  * Add a flag to the in-memory type identifier so that inlines can cheaply
  * identify Vars that need actual work done to ref/free/dup them.  Add the

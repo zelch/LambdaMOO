@@ -709,7 +709,11 @@ register_numbers(void)
 
 char rcsid_numbers[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.3  1997/03/08 06:25:42  nop
+ * 1.8.0p6 merge by hand.
+ *
  * Revision 1.2  1997/03/03 04:19:11  nop
  * GNU Indent normalization
  *

@@ -151,7 +151,11 @@ register_log(void)
 
 char rcsid_log[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:18:48  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:00  nop
  * LambdaMOO 1.8.0p5
  *

@@ -122,7 +122,11 @@ read_vm(int task_id)
 
 char rcsid_eval_vm[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:18:36  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:44:59  nop
  * LambdaMOO 1.8.0p5
  *

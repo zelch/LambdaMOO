@@ -385,7 +385,11 @@ lookup_addr_from_name(const char *name, unsigned timeout)
 
 char rcsid_name_lookup[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:19:00  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:00  nop
  * LambdaMOO 1.8.0p5
  *

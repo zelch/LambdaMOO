@@ -34,7 +34,11 @@ extern Match_Result match_pattern(Pattern p, const char *string,
 				Match_Indices * indices, int is_reverse);
 extern void free_pattern(Pattern p);
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:19:17  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:04  nop
  * LambdaMOO 1.8.0p5
  *

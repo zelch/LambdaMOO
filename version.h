@@ -57,7 +57,11 @@ extern int check_version(DB_Version);
 
 #endif				/* !Version_H */
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:19:39  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:04  nop
  * LambdaMOO 1.8.0p5
  *

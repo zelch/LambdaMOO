@@ -69,7 +69,11 @@ extern int srandom(unsigned);
 
 #endif
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:18:56  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:05  nop
  * LambdaMOO 1.8.0p5
  *

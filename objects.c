@@ -620,7 +620,11 @@ register_objects(void)
 
 char rcsid_objects[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.3  1997/07/07 03:24:54  nop
+ * Merge UNSAFE_OPTS (r5) after extensive testing.
+ * 
  * Revision 1.2.2.1  1997/03/20 18:07:50  bjj
  * Add a flag to the in-memory type identifier so that inlines can cheaply
  * identify Vars that need actual work done to ref/free/dup them.  Add the

@@ -229,7 +229,11 @@ stream_length(Stream * s)
 
 char rcsid_streams[] = "$Id$";
 
-/* $Log$
+/* 
+ * $Log$
+ * Revision 1.2  1997/03/03 04:19:28  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:45:01  nop
  * LambdaMOO 1.8.0p5
  *
