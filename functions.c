@@ -302,6 +302,16 @@ read_bi_func_data(Byte f_id, void **bi_func_state, Byte * bi_func_pc)
 
 
 package
+make_kill_pack()
+{
+    package p;
+
+    p.kind = BI_KILL;
+
+    return p;
+}
+
+package
 make_error_pack(enum error err)
 {
     return make_raise_pack(err, unparse_error(err), zero);
@@ -458,6 +468,9 @@ char rcsid_functions[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.5  1998/12/14 13:17:53  nop
+ * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
+ *
  * Revision 1.4  1997/07/07 03:24:54  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
  * 
