@@ -127,13 +127,10 @@ verbcasecmp(const char *verb, const char *word)
 unsigned
 str_hash(const char *s)
 {
-    unsigned ans = 0;
-    int i, len = strlen(s), offset = 0;
+    register unsigned ans = 0;
 
-    for (i = 0; i < len; i++) {
-	ans = ans ^ (cmap[(unsigned char) s[i]] << offset++);
-	if (offset == 25)
-	    offset = 0;
+    while (*s) {
+	ans = (ans << 3) + (ans >> 28) + cmap[(unsigned char) *s++];
     }
     return ans;
 }
@@ -446,6 +443,9 @@ char rcsid_utils[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.5  1999/08/09 02:36:33  nop
+ * Shortcut various equality tests if we have pointer equality.
+ *
  * Revision 1.4  1998/12/14 13:19:14  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
  *
