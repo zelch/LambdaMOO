@@ -589,6 +589,9 @@ rangeset_check(int end, int from, int to)
     return 0;
 }
 
+#ifdef IGNORE_PROP_PROTECTED
+#define bi_prop_protected(prop, progr) (0)
+#else
 static int
 bi_prop_protected(enum bi_prop prop, Objid progr)
 {
@@ -631,6 +634,7 @@ bi_prop_protected(enum bi_prop prop, Objid progr)
 
     return server_flag_option(pname);
 }
+#endif                /* IGNORE_PROP_PROTECTED */
 
 /** 
   the main interpreter -- run()
@@ -2685,6 +2689,9 @@ read_activ(activation * a, int which_vector)
 char rcsid_execute[] = "$Id$";
 
 /* $Log$
+ * Revision 1.2  1997/03/03 04:18:38  nop
+ * GNU Indent normalization
+ *
  * Revision 1.1.1.1  1997/03/03 03:44:59  nop
  * LambdaMOO 1.8.0p5
  *
