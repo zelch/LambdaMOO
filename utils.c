@@ -60,10 +60,10 @@ static const char cmap[] =
 int
 mystrcasecmp(const char *ss, const char *tt)
 {
-    const unsigned char *s = (const unsigned char *) ss;
-    const unsigned char *t = (const unsigned char *) tt;
+    register const unsigned char *s = (const unsigned char *) ss;
+    register const unsigned char *t = (const unsigned char *) tt;
 
-    if (ss == tt) {
+    if (s == t) {
 	return 0;
     }
     while (cmap[*s] == cmap[*t++]) {
