@@ -972,7 +972,7 @@ find_line_number(Program * prog, int vector, int pc)
 {
     Stmt *tree;
 
-    if (prog->cached_lineno_pc == pc)
+    if (prog->cached_lineno_pc == pc && prog->cached_lineno_vec == vector)
 	return prog->cached_lineno;
 
     tree = program_to_tree(prog, MAIN_VECTOR, vector, pc);
@@ -984,6 +984,7 @@ find_line_number(Program * prog, int vector, int pc)
     if (!hot_node && hot_position != DONE)
 	panic("Can't do job in FIND_LINE_NUMBER!");
 
+    prog->cached_lineno_vec = vector;
     prog->cached_lineno_pc = pc;
     prog->cached_lineno = lineno;
     return lineno;
@@ -993,6 +994,9 @@ char rcsid_decompile[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.4  1998/12/14 13:17:40  nop
+ * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
+ *
  * Revision 1.3  1997/07/07 03:24:53  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
  * 
