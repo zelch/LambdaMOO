@@ -1666,8 +1666,8 @@ activation_bytes(activation * ap)
     }
     /* XXX ignore bi_func_data, it's an opaque type. */
     total += value_bytes(ap->temp) - sizeof(Var);
-    total += strlen(ap->verb) + 1;
-    total += strlen(ap->verbname) + 1;
+    total += memo_strlen(ap->verb) + 1;
+    total += memo_strlen(ap->verbname) + 1;
     return total;
 }
 
@@ -2237,6 +2237,9 @@ char rcsid_tasks[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.13  2004/05/28 07:53:32  wrog
+ * added "intrinsic-commands" connection option
+ *
  * Revision 1.12  2004/05/22 01:25:44  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)
  *

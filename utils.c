@@ -364,7 +364,7 @@ value_bytes(Var v)
 
     switch (v.type) {
     case TYPE_STR:
-	size += strlen(v.v.str) + 1;
+	size += memo_strlen(v.v.str) + 1;
 	break;
     case TYPE_FLOAT:
 	size += sizeof(double);
@@ -443,6 +443,10 @@ char rcsid_utils[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.7  2002/08/18 09:47:26  bjj
+ * Finally made free_activation() take a pointer after noticing how !$%^&
+ * much time it was taking in a particular profiling run.
+ *
  * Revision 1.5  1999/08/09 02:36:33  nop
  * Shortcut various equality tests if we have pointer equality.
  *

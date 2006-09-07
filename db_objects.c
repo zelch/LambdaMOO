@@ -289,18 +289,18 @@ db_object_bytes(Objid oid)
     Verbdef *v;
 
     count = sizeof(Object) + sizeof(Object *);
-    count += strlen(o->name) + 1;
+    count += memo_strlen(o->name) + 1;
 
     for (v = o->verbdefs; v; v = v->next) {
 	count += sizeof(Verbdef);
-	count += strlen(v->name) + 1;
+	count += memo_strlen(v->name) + 1;
 	if (v->program)
 	    count += program_bytes(v->program);
     }
 
     count += sizeof(Propdef) * o->propdefs.cur_length;
     for (i = 0; i < o->propdefs.cur_length; i++)
-	count += strlen(o->propdefs.l[i].name) + 1;
+	count += memo_strlen(o->propdefs.l[i].name) + 1;
 
     len = dbpriv_count_properties(oid);
     count += (sizeof(Pval) - sizeof(Var)) * len;
@@ -554,6 +554,9 @@ char rcsid_db_objects[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.4  1998/12/14 13:17:36  nop
+ * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
+ *
  * Revision 1.3  1997/07/07 03:24:53  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
  *
