@@ -381,6 +381,7 @@ capture_label(State * state)
     f.prev_stacks = state->num_stacks;
     f.next = -1;
 
+    f.pc = 0xdefeca7e; /* silence compiler warning */
     return f;
 }
 
@@ -1354,6 +1355,9 @@ char rcsid_code_gen[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.11  2002/09/15 23:21:01  xplat
+ * GNU indent normalization.
+ *
  * Revision 1.10  2002/08/23 13:00:18  bjj
  * Removed a spurious EXPR_INDEX case left over from before x[$]
  *
