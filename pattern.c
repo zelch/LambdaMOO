@@ -108,7 +108,7 @@ translate_pattern(const char *pattern, int *tpatlen)
 Pattern
 new_pattern(const char *pattern, int case_matters)
 {
-    int tpatlen;
+    int tpatlen = -1;
     const char *tpattern = translate_pattern(pattern, &tpatlen);
     regexp_t buf = mymalloc(sizeof(*buf), M_PATTERN);
     Pattern p;
@@ -178,6 +178,9 @@ char rcsid_pattern[] = "$Id";
 
 /* 
  * $Log$
+ * Revision 1.4  1998/12/14 13:18:46  nop
+ * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
+ *
  * Revision 1.3  1997/03/03 07:04:01  bjj
  * fastmap is mymalloc'd, so myfree it
  *
