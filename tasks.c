@@ -950,7 +950,6 @@ static void
 flush_input(tqueue * tq, int show_messages)
 {
     if (tq->first_input) {
-	Stream *s = new_stream(100);
 	task *t;
 
 	if (show_messages)
@@ -958,8 +957,10 @@ flush_input(tqueue * tq, int show_messages)
 	while ((t = dequeue_input_task(tq, DQ_FIRST)) != 0) {
 	    /* TODO*** flush only non-TASK_OOB tasks ??? */
 	    if (show_messages) {
+		Stream *s = new_stream(100);
 		stream_printf(s, ">>     %s", t->t.input.string);
 		notify(tq->player, reset_stream(s));
+		free_stream(s);
 	    }
 	    free_task(t, 1);
 	}
@@ -2237,6 +2238,13 @@ char rcsid_tasks[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.14  2006/09/07 00:55:02  bjj
+ * Add new MEMO_STRLEN option which uses the refcounting mechanism to
+ * store strlen with strings.  This is basically free, since most string
+ * allocations are rounded up by malloc anyway.  This saves lots of cycles
+ * computing strlen.  (The change is originally from jitmoo, where I wanted
+ * inline range checks for string ops).
+ *
  * Revision 1.13  2004/05/28 07:53:32  wrog
  * added "intrinsic-commands" connection option
  *
