@@ -628,7 +628,6 @@ emergency_mode()
     Var words;
     int nargs;
     const char *command;
-    Stream *s = new_stream(100);
     Objid wizard = -1;
     int debug = 1;
     int start_ok = -1;
@@ -868,7 +867,6 @@ emergency_mode()
     fclose(stdout);
 #endif
 
-    free_stream(s);
     in_emergency_mode = 0;
     oklog("EMERGENCY_MODE: Leaving mode; %s continue...\n",
 	  start_ok ? "will" : "won't");
@@ -1798,6 +1796,10 @@ char rcsid_server[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.12  2007/06/02 21:34:36  wrog
+ * fix player_connect() so that the user_client_disconnected hook
+ * sees a disconnected player, same as with server_close()
+ *
  * Revision 1.11  2007/05/29 12:21:47  wrog
  * fixes server panic (or lost messages) caused by attempting to write to freed network handle during #0:user_reconnected; removes the one case where server and network handles were not being freed together
  *
