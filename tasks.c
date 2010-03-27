@@ -950,22 +950,25 @@ static void
 flush_input(tqueue * tq, int show_messages)
 {
     if (tq->first_input) {
+	Stream *s = 0;
 	task *t;
 
-	if (show_messages)
+	if (show_messages) {
 	    notify(tq->player, ">> Flushing the following pending input:");
+	    s = new_stream(100);
+	}
 	while ((t = dequeue_input_task(tq, DQ_FIRST)) != 0) {
 	    /* TODO*** flush only non-TASK_OOB tasks ??? */
 	    if (show_messages) {
-		Stream *s = new_stream(100);
 		stream_printf(s, ">>     %s", t->t.input.string);
 		notify(tq->player, reset_stream(s));
-		free_stream(s);
 	    }
 	    free_task(t, 1);
 	}
-	if (show_messages)
+	if (show_messages) {
 	    notify(tq->player, ">> (Done flushing)");
+	    free_stream(s);
+	}
     } else if (show_messages)
 	notify(tq->player, ">> No pending input to flush...");
 }
@@ -2238,6 +2241,9 @@ char rcsid_tasks[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.15  2010/03/27 14:20:18  wrog
+ * Fixed memory leak in flush_input
+ *
  * Revision 1.14  2006/09/07 00:55:02  bjj
  * Add new MEMO_STRLEN option which uses the refcounting mechanism to
  * store strlen with strings.  This is basically free, since most string
