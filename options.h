@@ -174,7 +174,7 @@
  */
 
 /* disable by default, +O enables: */
-#define OUTBOUND_NETWORK 0
+/* #define OUTBOUND_NETWORK 0 */
 
 /* enable by default, -O disables: */
 /* #define OUTBOUND_NETWORK 1 */
@@ -423,6 +423,9 @@
 
 /* 
  * $Log$
+ * Revision 1.12  2010/03/26 23:51:42  wrog
+ * New server options max_*_concat and max_concat_catchable
+ *
  * Revision 1.11  2006/12/06 23:57:51  wrog
  * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)
  *
