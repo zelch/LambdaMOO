@@ -36,10 +36,30 @@ extern char *stream_contents(Stream *);
 extern char *reset_stream(Stream *);
 extern int stream_length(Stream *);
 
+#include "exceptions.h"
+
+extern void enable_stream_exceptions();
+extern void disable_stream_exceptions();
+extern int stream_alloc_maximum;
+extern Exception stream_too_big;
+/*
+ * Calls to enable_stream_exceptions() and disable_stream_exceptions()
+ * must be paired and nest properly.
+ * 
+ * If (1) enable_stream_exceptions() is in effect, and 
+ * (2) stream_alloc_maximum is set to a positive value,
+ * then, upon any attempt to grow a stream beyond
+ * stream_alloc_maximum bytes, a stream_too_big exception
+ * will be raised.
+ */
+
 #endif
 
 /* 
  * $Log$
+ * Revision 1.4  2006/12/06 23:57:51  wrog
+ * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)
+ *
  * Revision 1.3  1998/12/14 13:19:02  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
  *
