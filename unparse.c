@@ -601,7 +601,7 @@ unparse_expr(Stream * str, Expr * expr)
 	break;
 
     case EXPR_VAR:
-	stream_add_string(str, value_to_literal(expr->e.var));
+	unparse_value(str, expr->e.var);
 	break;
 
     case EXPR_ASGN:
@@ -736,6 +736,9 @@ char rcsid_unparse[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.3  1998/12/14 13:19:12  nop
+ * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
+ *
  * Revision 1.2  1997/03/03 04:19:34  nop
  * GNU Indent normalization
  *
