@@ -719,8 +719,13 @@ emergency_mode()
 						wizard, debug, wizard, "",
 						&result)) {
 		case OUTCOME_DONE:
-		    printf("=> %s\n", value_to_literal(result));
-		    free_var(result);
+		    {
+			Stream *s = new_stream(100);
+			unparse_value(s, result);
+			printf("=> %s\n", reset_stream(s));
+			free_stream(s);
+			free_var(result);
+		    }
 		    break;
 		case OUTCOME_ABORTED:
 		    printf("=> *Aborted*\n");
@@ -902,14 +907,14 @@ set_server_cmdline(const char *line)
 }
 
 int
-server_flag_option(const char *name)
+server_flag_option(const char *name, int defallt)
 {
     Var v;
 
     if (get_server_option(SYSTEM_OBJECT, name, &v))
 	return is_true(v);
     else
-	return 0;
+	return defallt;
 }
 
 int
@@ -1796,6 +1801,9 @@ char rcsid_server[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.13  2010/03/27 18:16:49  wrog
+ * Removed completely unused stream
+ *
  * Revision 1.12  2007/06/02 21:34:36  wrog
  * fix player_connect() so that the user_client_disconnected hook
  * sees a disconnected player, same as with server_close()
