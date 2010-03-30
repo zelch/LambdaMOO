@@ -194,7 +194,7 @@ network_process_io(int timeout)
 		   && (count = read(0, buffer, sizeof(buffer))) > 0) {
 		got_some = 1;
 		if (binary) {
-		    stream_add_string(s, raw_bytes_to_binary(buffer, count));
+		    stream_add_raw_bytes_to_binary(s, buffer, count);
 		    server_receive_line(sh, reset_stream(s));
 		} else
 		    for (ptr = buffer, end = buffer + count;
@@ -229,6 +229,9 @@ char rcsid_net_single[] = "$Id$";
 
 /*
  * $Log$
+ * Revision 1.4  2006/12/06 23:57:51  wrog
+ * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)
+ *
  * Revision 1.3  2004/05/22 01:25:44  wrog
  * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)
  *

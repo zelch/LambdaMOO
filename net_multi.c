@@ -265,7 +265,7 @@ pull_input(nhandle * h)
 
     if ((count = read(h->rfd, buffer, sizeof(buffer))) > 0) {
 	if (h->binary) {
-	    stream_add_string(s, raw_bytes_to_binary(buffer, count));
+	    stream_add_raw_bytes_to_binary(s, buffer, count);
 	    server_receive_line(h->shandle, reset_stream(s));
 	    h->last_input_was_CR = 0;
 	} else {
@@ -704,6 +704,9 @@ char rcsid_net_multi[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.6  2006/12/06 23:57:51  wrog
+ * New INPUT_APPLY_BACKSPACE option to process backspace/delete characters on nonbinary connections (patch 1571939)
+ *
  * Revision 1.5  2005/09/29 18:46:17  bjj
  * Add third argument to open_network_connection() that associates a specific listener object with the new connection.  This simplifies a lot of outbound connection management.
  *
