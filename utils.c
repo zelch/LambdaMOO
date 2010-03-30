@@ -273,14 +273,10 @@ equality(Var lhs, Var rhs, int case_matters)
     return 0;
 }
 
-char *
-strsub(const char *source, const char *what, const char *with, int case_counts)
+void
+stream_add_strsub(Stream *str, const char *source, const char *what, const char *with, int case_counts)
 {
-    static Stream *str = 0;
     int lwhat = strlen(what);
-
-    if (str == 0)
-	str = new_stream(100);
 
     while (*source) {
 	if (!(case_counts ? strncmp(source, what, lwhat)
@@ -290,8 +286,6 @@ strsub(const char *source, const char *what, const char *with, int case_counts)
 	} else
 	    stream_add_char(str, *source++);
     }
-
-    return reset_stream(str);
 }
 
 int
@@ -382,14 +376,10 @@ value_bytes(Var v)
     return size;
 }
 
-const char *
-raw_bytes_to_binary(const char *buffer, int buflen)
+void
+stream_add_raw_bytes_to_binary(Stream *s, const char *buffer, int buflen)
 {
-    static Stream *s = 0;
     int i;
-
-    if (!s)
-	s = new_stream(100);
 
     for (i = 0; i < buflen; i++) {
 	unsigned char c = buffer[i];
@@ -399,8 +389,6 @@ raw_bytes_to_binary(const char *buffer, int buflen)
 	else
 	    stream_printf(s, "~%02x", (int) c);
     }
-
-    return reset_stream(s);
 }
 
 const char *
@@ -443,6 +431,13 @@ char rcsid_utils[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.8  2006/09/07 00:55:02  bjj
+ * Add new MEMO_STRLEN option which uses the refcounting mechanism to
+ * store strlen with strings.  This is basically free, since most string
+ * allocations are rounded up by malloc anyway.  This saves lots of cycles
+ * computing strlen.  (The change is originally from jitmoo, where I wanted
+ * inline range checks for string ops).
+ *
  * Revision 1.7  2002/08/18 09:47:26  bjj
  * Finally made free_activation() take a pointer after noticing how !$%^&
  * much time it was taking in a particular profiling run.

@@ -22,6 +22,7 @@
 
 #include "config.h"
 #include "execute.h"
+#include "streams.h"
 
 #undef MAX
 #undef MIN
@@ -70,7 +71,7 @@ var_dup(Var v)
 extern int equality(Var lhs, Var rhs, int case_matters);
 extern int is_true(Var v);
 
-extern char *strsub(const char *, const char *, const char *, int);
+extern void stream_add_strsub(Stream *, const char *, const char *, const char *, int);
 extern int strindex(const char *, const char *, int);
 extern int strrindex(const char *, const char *, int);
 
@@ -79,13 +80,16 @@ extern Objid get_system_object(const char *);
 
 extern int value_bytes(Var);
 
-extern const char *raw_bytes_to_binary(const char *buffer, int buflen);
+extern void stream_add_raw_bytes_to_binary(Stream *, const char *buffer, int buflen);
 extern const char *binary_to_raw_bytes(const char *binary, int *rawlen);
 
 #endif
 
 /* 
  * $Log$
+ * Revision 1.6  1998/12/14 13:19:15  nop
+ * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
+ *
  * Revision 1.5  1997/07/07 03:24:55  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
  *
