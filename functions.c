@@ -302,12 +302,13 @@ read_bi_func_data(Byte f_id, void **bi_func_state, Byte * bi_func_pc)
 
 
 package
-make_kill_pack()
+make_abort_pack(enum abort_reason reason)
 {
     package p;
 
     p.kind = BI_KILL;
-
+    p.u.ret.type = TYPE_INT;
+    p.u.ret.v.num = reason;
     return p;
 }
 
@@ -484,6 +485,12 @@ char rcsid_functions[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.9  2010/03/30 23:20:45  wrog
+ * server_flag_option() now takes a default value;
+ * Minimum values on max_string_concat/max_list_concat enforced;
+ * Treat max_concat_catchable like other boolean options;
+ * Cleaned up server option macro invocations
+ *
  * Revision 1.8  2010/03/27 00:05:53  wrog
  * New server options max_*_concat and max_concat_catchable;
  * New regime for caching integer/flag server options other than protect_<function>;

@@ -2082,7 +2082,7 @@ bf_kill_task(Var arglist, Byte next, void *vdata, Objid progr)
     if (e != E_NONE)
 	return make_error_pack(e);
     else if (id == current_task_id)
-	return make_kill_pack();
+	return make_abort_pack(ABORT_KILL);
 
     return no_var_pack();
 }
@@ -2241,6 +2241,9 @@ char rcsid_tasks[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.17  2010/03/30 23:26:36  wrog
+ * server_flag_option() now takes a default value
+ *
  * Revision 1.16  2010/03/27 17:37:53  wrog
  * Fixed memory leak in flush_input less stupidly
  *
