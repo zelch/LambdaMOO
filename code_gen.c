@@ -381,7 +381,10 @@ capture_label(State * state)
     f.prev_stacks = state->num_stacks;
     f.next = -1;
 
-    f.pc = 0xdefeca7e; /* silence compiler warning */
+    /* silence compiler warning;
+     * capture_label() is always followed by add_known_label()
+     */
+    f.pc = 0xdefeca7e;
     return f;
 }
 
@@ -1355,6 +1358,9 @@ char rcsid_code_gen[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.12  2010/03/26 07:54:46  wrog
+ * Fix compiler warning about unassigned field
+ *
  * Revision 1.11  2002/09/15 23:21:01  xplat
  * GNU indent normalization.
  *
