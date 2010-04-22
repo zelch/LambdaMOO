@@ -589,7 +589,7 @@ end_programming(tqueue * tq)
 	    s.nerrors = 0;
 	    s.input = stream_contents(tq->program_stream);
 
-	    program = parse_program(current_version, client, &s);
+	    program = parse_program(current_db_version, client, &s);
 
 	    sprintf(buf, "%d error(s).", s.nerrors);
 	    notify(player, buf);
@@ -1370,7 +1370,7 @@ register_task_queue(task_enumerator enumerator)
 static void
 write_forked_task(forked_task ft)
 {
-    int lineno = find_line_number(ft.program, ft.f_index, 0);
+    unsigned lineno = find_line_number(ft.program, ft.f_index, 0);
 
     dbio_printf("0 %d %d %d\n", lineno, ft.start_time, ft.id);
     write_activ_as_pi(ft.a);
@@ -1478,6 +1478,7 @@ read_task_queue(void)
 	    errlog("READ_TASK_QUEUE: Bad activation, count = %d.\n", count);
 	    return 0;
 	}
+	a.temp.type = TYPE_NONE;
 	if (!read_rt_env(&old_names, &old_rt_env, &old_size)) {
 	    errlog("READ_TASK_QUEUE: Bad env, count = %d.\n", count);
 	    return 0;
@@ -2241,6 +2242,9 @@ char rcsid_tasks[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.18  2010/03/31 18:02:05  wrog
+ * differentiate kinds of BI_KILL; replace make_kill_pack() with make_abort_pack(abort_reason)
+ *
  * Revision 1.17  2010/03/30 23:26:36  wrog
  * server_flag_option() now takes a default value
  *
