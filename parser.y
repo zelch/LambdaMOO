@@ -1222,7 +1222,7 @@ parse_list_as_program(Var code, Var *errors)
     state.cur_string = 1;
     state.cur_char = 0;
     state.errors = new_list(0);
-    program = parse_program(current_version, list_parser_client, &state);
+    program = parse_program(current_db_version, list_parser_client, &state);
     *errors = state.errors;
 
     return program;
@@ -1232,6 +1232,9 @@ char rcsid_parser[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.4  2004/05/22 01:25:44  wrog
+ * merging in WROGUE changes (W_SRCIP, W_STARTUP, W_OOB)
+ *
  * Revision 1.3  2004/04/09 19:52:52  bjj
  * == Revision 1.2.8.1  2003/06/07 20:16:24 wrog
  * fixed 6 rules that were missing final semicolons to make newer bison happy.
