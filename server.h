@@ -203,7 +203,7 @@ enum Server_Option {
 
 # undef _SVO_DEF
 
-    SVO__CACHE_SIZE
+    SVO__CACHE_SIZE   /* end marker, not an option */
 };
 
 /*
@@ -317,6 +317,12 @@ extern int read_active_connections(void);
 
 /* 
  * $Log$
+ * Revision 1.6  2010/03/30 22:59:57  wrog
+ * server_flag_option() now takes a default value;
+ * Minimum values on max_string_concat/max_list_concat enforced;
+ * Treat max_concat_catchable like other boolean options;
+ * Server option macros more readable/flexible/canonicalizable;
+ *
  * Revision 1.5  2010/03/27 00:02:35  wrog
  * New server options max_*_concat and max_concat_catchable;
  * New regime for caching integer/flag server options other than protect_<function>;

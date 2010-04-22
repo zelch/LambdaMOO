@@ -227,10 +227,10 @@
 /******************************************************************************
  * Prior to 1.8.4 property lookups were required on every reference to a
  * built-in property due to the possibility of that property being protected.
- * This was expensive and IGNORE_PROP_PROTECTED existed to permanently
+ * This used to be expensive.  IGNORE_PROP_PROTECTED thus existed to entirely
  * disable the use of $server_options.protect_<property> for those who
- * did not actually make use of protected builtin properties.  Since the
- * protect_<property> options are now cached, this switch is now deprecated.
+ * did not actually make use of protected builtin properties.  Since all
+ * protect_<property> options are now cached, this #define is now deprecated.
  ****************************************************************************** 
  */
 
@@ -426,6 +426,9 @@
 
 /* 
  * $Log$
+ * Revision 1.14  2010/03/29 21:59:49  wrog
+ * Set better MAX_CONCAT_* limits; revised description
+ *
  * Revision 1.13  2010/03/27 00:10:33  wrog
  * IGNORE_PROP_PROTECTED now off by default and deprecated;
  * Undo accidental uncommenting of OUTBOUND_NETWORK
