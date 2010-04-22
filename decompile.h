@@ -19,10 +19,13 @@
 #include "program.h"
 
 extern Stmt *decompile_program(Program * program, int vector);
-extern int find_line_number(Program * program, int vector, int pc);
+extern unsigned find_line_number(Program * program, int vector, unsigned pc);
 
 /* 
  * $Log$
+ * Revision 1.3  1998/12/14 13:17:41  nop
+ * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
+ *
  * Revision 1.2  1997/03/03 04:18:33  nop
  * GNU Indent normalization
  *

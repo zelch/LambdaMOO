@@ -968,8 +968,8 @@ find_hot_node(Stmt * stmt)
     return 0;
 }
 
-int
-find_line_number(Program * prog, int vector, int pc)
+unsigned
+find_line_number(Program * prog, int vector, unsigned pc)
 {
     Stmt *tree;
 
@@ -995,6 +995,9 @@ char rcsid_decompile[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.7  2006/12/06 23:51:31  wrog
+ * Fix compiler warnings about unused values
+ *
  * Revision 1.6  2002/09/15 23:21:01  xplat
  * GNU indent normalization.
  *
