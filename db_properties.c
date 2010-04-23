@@ -429,6 +429,7 @@ db_find_property(Objid oid, const char *name, Var * value)
 	    }
 	}
     }
+
     h.ptr = 0;
     return h;
 }
@@ -656,6 +657,9 @@ char rcsid_db_properties[] = "$Id$";
 
 /* 
  * $Log$
+ * Revision 1.4  2010/03/26 23:46:47  wrog
+ * Moved builtin properties into a macro\nFixed compiler warning about unassigned field
+ *
  * Revision 1.3  1998/12/14 13:17:38  nop
  * Merge UNSAFE_OPTS (ref fixups); fix Log tag placement to fit CVS whims
  *
