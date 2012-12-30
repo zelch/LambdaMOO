@@ -489,6 +489,13 @@ main ()
 ], AC_DEFINE(POSIX_NONBLOCKING_WORKS))
 
 dnl ***************************************************************************
+dnl OpenSSL library checks
+AC_CHECK_OPENSSL
+if test -z "$have_openssl"; then
+	have_openssl=no
+fi
+
+dnl ***************************************************************************
 echo checking which MOO networking configurations are likely to work...
 define(MOO_ADD_NET_CONFIG,[
     NETWORK_CONFIGURATIONS="$NETWORK_CONFIGURATIONS $1"])

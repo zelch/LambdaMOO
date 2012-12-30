@@ -28,6 +28,18 @@
 #include "options.h"
 #include "structures.h"
 
+#ifdef USE_SSL
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
+extern SSL_CTX *ctx;
+extern const unsigned char *sid_ctx;
+#endif
+
+typedef enum {
+    NET_TYPE_CLEAR, NET_TYPE_SSL
+} net_type;
+
 typedef struct {		/* Network's handle on a connection */
     void *ptr;
 } network_handle;

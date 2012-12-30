@@ -32,7 +32,6 @@ extern int mkfifo(const char *, mode_t);
 #endif
 
 #if !HAVE_MKFIFO
-extern int mknod(const char *file, int mode, int dev);
 #define mkfifo(path, mode)	mknod(path, S_IFIFO | (mode), 0)
 #endif
 

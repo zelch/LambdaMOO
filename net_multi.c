@@ -41,6 +41,26 @@
 #include "timers.h"
 #include "utils.h"
 
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+/* Correct callback definitions overriding ssl.h */
+#ifndef NO_RSA
+#ifdef SSL_CTX_set_tmp_rsa_callback
+    #undef SSL_CTX_set_tmp_rsa_callback
+#endif
+#define SSL_CTX_set_tmp_rsa_callback(ctx,cb) \
+    SSL_CTX_ctrl(ctx,SSL_CTRL_SET_TMP_RSA_CB,0,(char *)cb)
+#endif /* NO_RSA */
+#ifndef NO_DH
+#ifdef SSL_CTX_set_tmp_dh_callback
+    #undef SSL_CTX_set_tmp_dh_callback
+#endif
+#define SSL_CTX_set_tmp_dh_callback(ctx,dh) \
+    SSL_CTX_ctrl(ctx,SSL_CTRL_SET_TMP_DH_CB,0,(char *)dh)
+#endif /* NO_DH */
+
+char certfile[1024] = { '\0' };
+#endif /* USE_SSL */
+
 static struct proto proto;
 static int eol_length;		/* == strlen(proto.eol_out_string) */
 
@@ -58,6 +78,14 @@ static int ewouldblock = -1;
 
 static int *pocket_descriptors = 0;	/* fds we keep around in case we need
 					 * one and no others are left... */
+
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+SSL_CTX *ctx;
+const unsigned char *sid_ctx="LambdaMOO SID";
+#ifndef NO_RSA
+RSA *rsa_tmp;
+#endif
+#endif
 
 typedef struct text_block {
     struct text_block *next;
@@ -81,6 +109,11 @@ typedef struct nhandle {
     int outbound, binary;
 #if NETWORK_PROTOCOL == NP_TCP
     int client_echo;
+#ifdef USE_SSL
+    int connection_type;
+    int connected;
+    SSL *ssl;
+#endif
 #endif
 } nhandle;
 
@@ -91,6 +124,9 @@ typedef struct nlistener {
     server_listener slistener;
     int fd;
     const char *name;
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+    int connection_type;
+#endif
 } nlistener;
 
 static nlistener *all_nlisteners = 0;
@@ -219,6 +255,10 @@ push_output(nhandle * h)
     text_block *b;
     int count;
 
+#ifdef USE_SSL
+    if (!h->connected) return 1;
+#endif
+
     if (h->output_lines_flushed > 0) {
 	char buf[100];
 	int length;
@@ -231,16 +271,32 @@ push_output(nhandle * h)
 		h->output_lines_flushed == 1 ? "has" : "have",
 		proto.eol_out_string);
 	length = strlen(buf);
-	count = write(h->wfd, buf, length);
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+	if (h->connection_type == NET_TYPE_SSL)
+	    count = SSL_write(h->ssl, buf, length);
+	else
+#endif
+	    count = write(h->wfd, buf, length);
 	if (count == length)
 	    h->output_lines_flushed = 0;
 	else
 	    return count >= 0 || errno == eagain || errno == ewouldblock;
     }
     while ((b = h->output_head) != 0) {
-	count = write(h->wfd, b->start, b->length);
-	if (count < 0)
-	    return (errno == eagain || errno == ewouldblock);
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+	if (h->connection_type == NET_TYPE_SSL) {
+	    count = SSL_write(h->ssl, b->start, b->length);
+	} else
+#endif
+	    count = write(h->wfd, b->start, b->length);
+	if (count < 0) {
+	    if (h->connection_type == NET_TYPE_SSL) {
+
+		SSL_get_error(h->ssl, count);
+		errlog("SSL: Error: %.256s\n", ERR_error_string(ERR_get_error(), NULL));
+	    }
+ 	    return (errno == eagain || errno == ewouldblock);
+	}
 	h->output_length -= count;
 	if (count == b->length) {
 	    h->output_head = b->next;
@@ -259,11 +315,66 @@ static int
 pull_input(nhandle * h)
 {
     Stream *s = h->input;
-    int count;
+    int count = 0;
     char buffer[1024];
     char *ptr, *end;
 
-    if ((count = read(h->rfd, buffer, sizeof(buffer))) > 0) {
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+    if (h->connection_type == NET_TYPE_SSL) {
+	if (!h->connected) {
+	    int SSL_ret;
+	    char sslerror[120];
+
+	    if (h->outbound)
+		SSL_ret = SSL_connect(h->ssl);
+	    else
+		SSL_ret = SSL_accept(h->ssl);
+
+	    /* Check to see whether we have successfully completed the SSL
+	     * handshake yet.  We can't block waiting for this to complete,
+	     * so we will have to get it next time around.
+	     */
+	    switch (SSL_get_error(h->ssl, SSL_ret)) {
+		case SSL_ERROR_WANT_READ:
+		case SSL_ERROR_WANT_WRITE:
+		    /* non-blocking socket wants more time to read or write */
+		    return 1;
+		    break;
+		case SSL_ERROR_NONE:
+		    /* The operation succeeded, so we're connected. */
+		    h->connected++;
+ 		    break;
+		default:
+		    ERR_error_string(ERR_get_error(), sslerror);
+		    errlog("SSL: accept failed (%s)\n", sslerror);
+		    return 0;
+	    }
+
+	    /* Generate log entries for debugging. */
+	    oklog("SSL: State = %s\n", SSL_state_string_long(h->ssl));
+	    oklog("SSL: Cipher = %s\n", SSL_get_cipher(h->ssl));
+
+	    /* Not sure if I need this. */
+	    SSL_set_read_ahead(h->ssl, 1);
+	    return 1;
+	} else {
+	    count = SSL_read(h->ssl, buffer, sizeof(buffer));
+
+	    if (count < 0) {
+		/* If the SSL connection wants more time, we'll try again
+		 * next time.
+		 */
+		if (SSL_get_error(h->ssl, count) == SSL_ERROR_WANT_READ)
+			return 1;
+		else
+		    errlog("SSL: OpenSSL: %.256s\n", ERR_error_string(ERR_get_error(), NULL));
+	    }
+	}
+    } else
+#endif
+	count = read(h->rfd, buffer, sizeof(buffer));
+
+    if (count > 0) {
 	if (h->binary) {
 	    stream_add_raw_bytes_to_binary(s, buffer, count);
 	    server_receive_line(h->shandle, reset_stream(s));
@@ -292,7 +403,7 @@ pull_input(nhandle * h)
 
 static nhandle *
 new_nhandle(int rfd, int wfd, const char *local_name, const char *remote_name,
-	    int outbound)
+	    int outbound, int ssl)
 {
     nhandle *h;
     static Stream *s = 0;
@@ -325,6 +436,47 @@ new_nhandle(int rfd, int wfd, const char *local_name, const char *remote_name,
     h->binary = 0;
 #if NETWORK_PROTOCOL == NP_TCP
     h->client_echo = 1;
+#ifdef USE_SSL
+    if (ssl) {
+	int ret;
+	BIO *rbio = NULL;
+	BIO *wbio = NULL;
+	char sslerror[120];
+
+	h->connection_type = NET_TYPE_SSL;
+	h->connected = 0;
+
+	if (!(h->ssl = SSL_new(ctx))) {
+	    /* What should be done here? -kR */
+	    errlog("SSL: new connection failed\n");
+	}
+	SSL_clear(h->ssl);
+	oklog("SSL: new connection generated\n");
+#if SSLEAY_VERSION_NUMBER >= 0x0922
+	SSL_set_session_id_context(h->ssl, sid_ctx, strlen(sid_ctx));
+#endif
+	if (outbound)
+	    SSL_set_connect_state(h->ssl);
+	else
+	    SSL_set_accept_state(h->ssl);
+
+	rbio = BIO_new(BIO_s_socket());
+	wbio = BIO_new(BIO_s_socket());
+
+	if (rbio == NULL && wbio == NULL) {
+	    SSLerr(SSL_F_SSL_SET_FD, ERR_R_BUF_LIB);
+	    /* What should I do? */
+	    ERR_error_string(ERR_get_error(), sslerror);
+	    errlog("SSL: BIO creation failed (%s)\n", sslerror);
+	}
+
+	BIO_set_fd(rbio, h->rfd, BIO_NOCLOSE);
+	BIO_set_fd(wbio, h->wfd, BIO_NOCLOSE);
+
+	SSL_set_bio(h->ssl, rbio, wbio);
+    } else
+	h->connection_type = NET_TYPE_CLEAR;
+#endif /* this is only for a client */
 #endif
 
     stream_printf(s, "%s %s %s",
@@ -350,6 +502,14 @@ close_nhandle(nhandle * h)
 	b = bb;
     }
     free_stream(h->input);
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+    if (h->connection_type == NET_TYPE_SSL) {
+	errlog("SSL: closing connection\n");
+/*	SSL_set_shutdown(h->ssl, SSL_SENT_SHUTDOWN|SSL_RECEIVED_SHUTDOWN);*/
+	SSL_shutdown(h->ssl);
+	SSL_free(h->ssl);
+    }
+#endif
     proto_close_connection(h->rfd, h->wfd);
     free_str(h->name);
     myfree(h, M_NETWORK);
@@ -369,12 +529,12 @@ close_nlistener(nlistener * l)
 static void
 make_new_connection(server_listener sl, int rfd, int wfd,
 		    const char *local_name, const char *remote_name,
-		    int outbound)
+		    int outbound, int ssl)
 {
     nhandle *h;
     network_handle nh;
 
-    nh.ptr = h = new_nhandle(rfd, wfd, local_name, remote_name, outbound);
+    nh.ptr = h = new_nhandle(rfd, wfd, local_name, remote_name, outbound, ssl);
     h->shandle = server_new_connection(sl, nh, outbound);
 }
 
@@ -406,7 +566,7 @@ accept_new_connection(nlistener * l)
 
     switch (proto_accept_connection(l->fd, &rfd, &wfd, &host_name)) {
     case PA_OKAY:
-	make_new_connection(l->slistener, rfd, wfd, l->name, host_name, 0);
+	make_new_connection(l->slistener, rfd, wfd, l->name, host_name, 0, l->connection_type == NET_TYPE_SSL);
 	break;
 
     case PA_FULL:
@@ -415,7 +575,7 @@ accept_new_connection(nlistener * l)
 	if (proto_accept_connection(l->fd, &rfd, &wfd, &host_name) != PA_OKAY)
 	    errlog("Can't accept connection even by emptying pockets!\n");
 	else {
-	    nh.ptr = h = new_nhandle(rfd, wfd, l->name, host_name, 0);
+	    nh.ptr = h = new_nhandle(rfd, wfd, l->name, host_name, 0, l->connection_type == NET_TYPE_SSL);
 	    server_refuse_connection(l->slistener, nh);
 	    close_nhandle(h);
 	}
@@ -485,8 +645,54 @@ network_protocol_name(void)
 const char *
 network_usage_string(void)
 {
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+    static char usage[128] = { 0 };
+    snprintf (usage, sizeof(usage), "%s [-C ssl_cert_file]", proto_usage_string());
+    return usage;
+#else
     return proto_usage_string();
+#endif
 }
+
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+#ifndef NO_RSA
+static RSA *
+tmp_rsa_cb(SSL *s, int export, int keylength)
+{ /* temporary RSA key callback */
+    return rsa_tmp;
+}
+#endif /* NO_RSA */
+
+#ifndef NO_DH
+static DH *
+tmp_dh_cb(SSL *s, int export)
+{ /* temporary DH key callback */
+    static DH *dh_tmp = NULL;
+    BIO *in=NULL;
+
+    if(dh_tmp)
+	return(dh_tmp);
+    oklog("SSL: generating Diffie-Hellman key...\n");
+    in=BIO_new_file(certfile, "r");
+    if(in == NULL) {
+	errlog("SSL: DH could not read %s: %s\n", certfile, strerror(errno));
+	return(NULL);
+    }
+    dh_tmp=PEM_read_bio_DHparams(in, NULL, NULL, NULL);
+    if(dh_tmp==NULL) {
+	errlog("SSL: could not load DH parameters\n");
+	return(NULL);
+    }
+    if(!DH_generate_key(dh_tmp)) {
+	errlog("SSL: could not generate DH keys\n");
+	return(NULL);
+    }
+    oklog("SSL: Diffie-Hellman length: %d\n", DH_size(dh_tmp));
+    if(in != NULL) BIO_free(in);
+    return(dh_tmp);
+}
+#endif /* NO_DH */
+#endif
 
 int
 network_initialize(int argc, char **argv, Var * desc)
@@ -500,6 +706,54 @@ network_initialize(int argc, char **argv, Var * desc)
     /* we don't care about SIGPIPE, we notice it in mplex_wait() and write() */
     signal(SIGPIPE, SIG_IGN);
 
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+    for ( ; argc > 0; argc--, argv++) {
+	if (!strcmp("-c", argv[0]) && argc > 1) {
+	    strncpy(certfile, argv[1], sizeof(certfile));
+	}
+    }
+
+    if (certfile[0]) {
+	SSL_load_error_strings();
+	SSLeay_add_ssl_algorithms();
+	ctx = SSL_CTX_new(SSLv3_server_method());
+	if (!ctx) {
+	    ERR_print_errors_fp(stderr);
+	}
+	oklog("SSL: global context initialized\n");
+	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_BOTH);
+	if (SSL_CTX_use_certificate_file(ctx, certfile, SSL_FILETYPE_PEM) <= 0) {
+	    errlog("SSL: failed to use certificate file!\n");
+	}
+	if (SSL_CTX_use_PrivateKey_file(ctx, certfile, SSL_FILETYPE_PEM) <= 0) {
+	    errlog("SSL: failed to load private key!\n");
+	}
+	if (!SSL_CTX_check_private_key(ctx)) {
+	    errlog("SSL: private key does not match the cert public key\n");
+	}
+    }
+#if 0
+#ifndef NO_RSA
+    oklog("SSL: generating %d bit temporary RSA key\n", KEYLENGTH);
+#if SSLEAY_VERSION_NUMBER <= 0x0800
+    rsa_tmp=RSA_generate_key(KEYLENGTH, RSA_F4, NULL);
+#else
+    rsa_tmp=RSA_generate_key(KEYLENGTH, RSA_F4, NULL, NULL);
+#endif
+    if (!rsa_tmp) {
+        errlog("SSL: couldn't generate temporary RSA key\n");
+    }
+    if (!SSL_CTX_set_tmp_rsa(ctx, rsa_tmp)) {
+	errlog("SSL: SSL_CTX_set_tmp_rsa\n");
+    }
+    SSL_CTX_set_tmp_rsa_callback(ctx, tmp_rsa_cb);
+#endif /* NO_RSA */
+#ifndef NO_DH
+    SSL_CTX_set_tmp_dh_callback(ctx, tmp_dh_cb);
+#endif /* NO_DH */
+#endif
+#endif /* USE_SSL */
+
     return 1;
 }
 
@@ -508,14 +762,43 @@ network_make_listener(server_listener sl, Var desc,
 		   network_listener * nl, Var * canon, const char **name)
 {
     int fd;
-    enum error e = proto_make_listener(desc, &fd, canon, name);
+    enum error e = E_NONE;
     nlistener *l;
+    Var newdesc;
+    int connection_type = NET_TYPE_CLEAR;
+
+    if (desc.type == TYPE_LIST) {
+	if (desc.v.list[0].v.num != 3)
+	    return E_ARGS;
+	if (desc.v.list[1].type != TYPE_STR ||
+	    desc.v.list[2].type != TYPE_INT ||
+	    desc.v.list[3].type != TYPE_STR)
+	    return E_TYPE;
+	newdesc.type = TYPE_INT;
+	newdesc.v.num = desc.v.list[2].v.num;
+	if (!mystrcasecmp(desc.v.list[1].v.str, "clear")) {
+	    connection_type = NET_TYPE_CLEAR;
+	} else if (!mystrcasecmp(desc.v.list[1].v.str, "SSL")) {
+	    connection_type = NET_TYPE_SSL;
+	    oklog("Creating SSL listener on port %d\n", newdesc.v.num);
+	} else
+	    return E_TYPE;
+	if (!mystrcasecmp(desc.v.list[3].v.str, "TCP")) {
+	    /* ok, this is good, but we don't care right now */
+	} else {
+	    errlog("returning E_TYPE");
+	    return E_TYPE;
+	}
+	e = proto_make_listener(newdesc, &fd, canon, name);
+    } else
+	e = proto_make_listener(desc, &fd, canon, name);
 
     if (e == E_NONE) {
 	nl->ptr = l = mymalloc(sizeof(nlistener), M_NETWORK);
 	l->fd = fd;
 	l->slistener = sl;
 	l->name = str_dup(*name);
+	l->connection_type = connection_type;
 	if (all_nlisteners)
 	    all_nlisteners->prev = &(l->next);
 	l->next = all_nlisteners;
@@ -673,7 +956,7 @@ network_open_connection(Var arglist, server_listener sl)
     e = proto_open_connection(arglist, &rfd, &wfd, &local_name, &remote_name);
     if (e == E_NONE)
 	make_new_connection(sl, rfd, wfd,
-			    local_name, remote_name, 1);
+			    local_name, remote_name, 1, 0);
 
     return e;
 }
@@ -698,6 +981,10 @@ network_shutdown(void)
 	close_nhandle(all_nhandles);
     while (all_nlisteners)
 	close_nlistener(all_nlisteners);
+
+#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
+    SSL_CTX_free(ctx);
+#endif
 }
 
 char rcsid_net_multi[] = "$Id$";

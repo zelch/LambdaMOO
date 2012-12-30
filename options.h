@@ -180,6 +180,8 @@
 /* #define OUTBOUND_NETWORK 1 */
 
 
+#define USE_SSL 1
+
 /******************************************************************************
  * The following constants define certain aspects of the server's network
  * behavior if NETWORK_PROTOCOL is not defined as NP_SINGLE.

@@ -14,10 +14,10 @@
 #   Pavel@Xerox.Com
 
 CC = @CC@
-LIBRARIES = @LIBS@
+LIBRARIES = @LIBS@ @OPENSSL_LIBS@
 YACC = @YACC@
 
-CFLAGS = -O
+CFLAGS = -O @OPENSSL_INCLUDES@
 # If you're using GCC, you may prefer:
 # CFLAGS = -O2 -finline-functions
 #
