@@ -11,7 +11,7 @@
 static char outbound_network_enabled = OUTBOUND_NETWORK;
 #endif
 
-static in_addr_t bind_local_ip = INADDR_ANY;
+static struct in6_addr bind_local_ip = IN6ADDR_ANY_INIT;
 
 const char *
 proto_usage_string(void)
@@ -45,9 +45,13 @@ tcp_arguments(int argc, char **argv, int *pport)
                 return 0;
             argc--;
             argv++;
-            bind_local_ip = inet_addr(argv[0]);
-            if (bind_local_ip == INADDR_NONE)
-                return 0;
+	    if (inet_pton(AF_INET6, argv[0], &bind_local_ip) != 1) {
+		char addr_buf[128] = { '\0' };
+		snprintf(addr_buf, sizeof(addr_buf), "::FFFF:%s", argv[0]);
+		if (inet_pton(AF_INET6, addr_buf, &bind_local_ip) != 1) {
+		    return 0;
+		}
+	    }
 	    oklog("CMDLINE: Source address restricted to %s\n", argv[0]);
         }
         else {

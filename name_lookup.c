@@ -141,7 +141,7 @@ struct request {
     unsigned timeout;
     union {
 	unsigned length;
-	struct sockaddr_in address;
+	struct sockaddr_in6 address;
     } u;
 };
 
@@ -196,9 +196,9 @@ lookup(int to_intermediary, int from_intermediary)
 	    const char *host_name;
 	    int length;
 	    id = set_timer(req.timeout, timeout_proc, 0);
-	    e = gethostbyaddr((void *) &req.u.address.sin_addr,
-			      sizeof(req.u.address.sin_addr),
-			      AF_INET);
+	    e = gethostbyaddr((void *) &req.u.address.sin6_addr,
+			      sizeof(req.u.address.sin6_addr),
+			      AF_INET6);
 	    cancel_timer(id);
 	    host_name = e ? e->h_name : "";
 	    length = strlen(host_name);
@@ -314,7 +314,7 @@ abandon_intermediary(const char *prefix)
 }
 
 const char *
-lookup_name_from_addr(struct sockaddr_in *addr, unsigned timeout)
+lookup_name_from_addr(struct sockaddr_in6 *addr, unsigned timeout)
 {
     struct request req;
     static char *buffer = 0;
@@ -347,13 +347,11 @@ lookup_name_from_addr(struct sockaddr_in *addr, unsigned timeout)
      */
 
     {
-	static char decimal[20];
-	unsigned32 a = ntohl(addr->sin_addr.s_addr);
+	static char buf[128] = { '\0' };
 
-	sprintf(decimal, "%u.%u.%u.%u",
-		(unsigned) (a >> 24) & 0xff, (unsigned) (a >> 16) & 0xff,
-		(unsigned) (a >> 8) & 0xff, (unsigned) a & 0xff);
-	return decimal;
+	inet_ntop(AF_INET6, &addr->sin6_addr, buf, sizeof(buf));
+
+	return buf;
     }
 }
 

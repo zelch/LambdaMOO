@@ -71,7 +71,7 @@ proto_initialize(struct proto *proto, Var * desc, int argc, char **argv)
 enum error
 proto_make_listener(Var desc, int *fd, Var * canon, const char **name)
 {
-    struct sockaddr_in address;
+    struct sockaddr_in6 address;
     int s, port, option = 1;
     static Stream *st = 0;
 
@@ -82,7 +82,7 @@ proto_make_listener(Var desc, int *fd, Var * canon, const char **name)
 	return E_TYPE;
 
     port = desc.v.num;
-    s = socket(AF_INET, SOCK_STREAM, 0);
+    s = socket(AF_INET6, SOCK_STREAM, 0);
     if (s < 0) {
 	log_perror("Creating listening socket");
 	return E_QUOTA;
@@ -93,9 +93,9 @@ proto_make_listener(Var desc, int *fd, Var * canon, const char **name)
 	close(s);
 	return E_QUOTA;
     }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = bind_local_ip;
-    address.sin_port = htons(port);
+    address.sin6_family = AF_INET6;
+    address.sin6_addr = bind_local_ip;
+    address.sin6_port = htons(port);
     if (bind(s, (struct sockaddr *) &address, sizeof(address)) < 0) {
 	enum error e = E_QUOTA;
 
@@ -114,7 +114,7 @@ proto_make_listener(Var desc, int *fd, Var * canon, const char **name)
 	    return E_QUOTA;
 	}
 	canon->type = TYPE_INT;
-	canon->v.num = ntohs(address.sin_port);
+	canon->v.num = ntohs(address.sin6_port);
     } else
 	*canon = var_ref(desc);
 
@@ -138,7 +138,7 @@ proto_accept_connection(int listener_fd, int *read_fd, int *write_fd,
 {
     int timeout = server_int_option("name_lookup_timeout", 5);
     int fd;
-    struct sockaddr_in address;
+    struct sockaddr_in6 address;
     size_t addr_length = sizeof(address);
     static Stream *s = 0;
 
@@ -157,7 +157,7 @@ proto_accept_connection(int listener_fd, int *read_fd, int *write_fd,
     *read_fd = *write_fd = fd;
     stream_printf(s, "%s, port %d",
 		  lookup_name_from_addr(&address, timeout),
-		  (int) ntohs(address.sin_port));
+		  (int) ntohs(address.sin6_port));
     *name = reset_stream(s);
     return PA_OKAY;
 }
@@ -234,6 +234,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
 	return E_QUOTA;
     }
     
+#if 0
     if (bind_local_ip != INADDR_ANY) {
 	static struct sockaddr_in local_addr;
 
@@ -252,6 +253,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
 	    return e;
 	}
     }	 
+#endif
     TRY {
 	id = set_timer(server_int_option("outbound_connect_timeout", 5),
 		       timeout_proc, 0);

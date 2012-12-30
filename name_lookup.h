@@ -39,7 +39,7 @@ extern unsigned32 lookup_addr_from_name(const char *name,
 				 * decimal address are translated properly.
 				 */
 
-extern const char *lookup_name_from_addr(struct sockaddr_in *addr,
+extern const char *lookup_name_from_addr(struct sockaddr_in6 *addr,
 					 unsigned timeout);
 				/* Translate an internet address, contained
 				 * in the sockaddr_in, to a host name.  If
