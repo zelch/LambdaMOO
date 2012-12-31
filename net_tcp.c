@@ -56,7 +56,7 @@ tcp_arguments(int argc, char **argv, int *pport)
         }
         else {
             if (p != 0) /* strtoul always sets p */
-                return 0;
+                return 1;
             if (0 == strcmp(argv[0],"-p")) {
                 if (argc <= 1)
                     return 0;

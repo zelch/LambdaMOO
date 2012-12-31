@@ -436,6 +436,7 @@ new_nhandle(int rfd, int wfd, const char *local_name, const char *remote_name,
     h->binary = 0;
 #if NETWORK_PROTOCOL == NP_TCP
     h->client_echo = 1;
+    h->connection_type = NET_TYPE_CLEAR;
 #ifdef USE_SSL
     if (ssl) {
 	int ret;
@@ -443,44 +444,44 @@ new_nhandle(int rfd, int wfd, const char *local_name, const char *remote_name,
 	BIO *wbio = NULL;
 	char sslerror[120];
 
-	h->connection_type = NET_TYPE_SSL;
-	h->connected = 0;
-
-	if (!(h->ssl = SSL_new(ctx))) {
-	    /* What should be done here? -kR */
-	    errlog("SSL: new connection failed\n");
-	}
-	SSL_clear(h->ssl);
-	oklog("SSL: new connection generated\n");
-#if SSLEAY_VERSION_NUMBER >= 0x0922
-	SSL_set_session_id_context(h->ssl, sid_ctx, strlen(sid_ctx));
-#endif
-	if (outbound)
-	    SSL_set_connect_state(h->ssl);
-	else
-	    SSL_set_accept_state(h->ssl);
-
-	rbio = BIO_new(BIO_s_socket());
-	wbio = BIO_new(BIO_s_socket());
-
-	if (rbio == NULL && wbio == NULL) {
-	    SSLerr(SSL_F_SSL_SET_FD, ERR_R_BUF_LIB);
-	    /* What should I do? */
+	if (!(h->ssl = SSL_new(ctx))) { /* Failure to make a new SSL socket, erp. */
 	    ERR_error_string(ERR_get_error(), sslerror);
-	    errlog("SSL: BIO creation failed (%s)\n", sslerror);
+	    errlog("SSL: new connection failed (%s)\n", sslerror);
+	} else {
+	    h->connection_type = NET_TYPE_SSL;
+	    h->connected = 0;
+
+	    SSL_clear(h->ssl);
+	    oklog("SSL: new connection generated\n");
+#if SSLEAY_VERSION_NUMBER >= 0x0922
+	    SSL_set_session_id_context(h->ssl, sid_ctx, strlen(sid_ctx));
+#endif
+	    if (outbound)
+		SSL_set_connect_state(h->ssl);
+	    else
+		SSL_set_accept_state(h->ssl);
+
+	    rbio = BIO_new(BIO_s_socket());
+	    wbio = BIO_new(BIO_s_socket());
+
+	    if (rbio == NULL && wbio == NULL) {
+		SSLerr(SSL_F_SSL_SET_FD, ERR_R_BUF_LIB);
+		/* What should I do? */
+		ERR_error_string(ERR_get_error(), sslerror);
+		errlog("SSL: BIO creation failed (%s)\n", sslerror);
+	    }
+
+	    BIO_set_fd(rbio, h->rfd, BIO_NOCLOSE);
+	    BIO_set_fd(wbio, h->wfd, BIO_NOCLOSE);
+
+	    SSL_set_bio(h->ssl, rbio, wbio);
 	}
-
-	BIO_set_fd(rbio, h->rfd, BIO_NOCLOSE);
-	BIO_set_fd(wbio, h->wfd, BIO_NOCLOSE);
-
-	SSL_set_bio(h->ssl, rbio, wbio);
-    } else
-	h->connection_type = NET_TYPE_CLEAR;
-#endif /* this is only for a client */
+    }
+#endif
 #endif
 
-    stream_printf(s, "%s %s %s",
-		  local_name, outbound ? "to" : "from", remote_name);
+    stream_printf(s, "%s %s %s%s",
+		  local_name, outbound ? "to" : "from", remote_name, h->connection_type == NET_TYPE_SSL ? " (SSL)" : "");
     h->name = str_dup(reset_stream(s));
 
     return h;
@@ -714,6 +715,8 @@ network_initialize(int argc, char **argv, Var * desc)
     }
 
     if (certfile[0]) {
+	int error = 0;
+
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
 	ctx = SSL_CTX_new(SSLv3_server_method());
@@ -722,14 +725,22 @@ network_initialize(int argc, char **argv, Var * desc)
 	}
 	oklog("SSL: global context initialized\n");
 	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_BOTH);
-	if (SSL_CTX_use_certificate_file(ctx, certfile, SSL_FILETYPE_PEM) <= 0) {
+	if (SSL_CTX_use_certificate_chain_file(ctx, certfile) <= 0) {
 	    errlog("SSL: failed to use certificate file!\n");
+	    error = 1;
 	}
 	if (SSL_CTX_use_PrivateKey_file(ctx, certfile, SSL_FILETYPE_PEM) <= 0) {
 	    errlog("SSL: failed to load private key!\n");
+	    error = 1;
 	}
 	if (!SSL_CTX_check_private_key(ctx)) {
 	    errlog("SSL: private key does not match the cert public key\n");
+	    error = 1;
+	}
+
+	if (error) {
+	    SSL_CTX_free(ctx);
+	    ctx = NULL;
 	}
     }
 #if 0
@@ -779,8 +790,12 @@ network_make_listener(server_listener sl, Var desc,
 	if (!mystrcasecmp(desc.v.list[1].v.str, "clear")) {
 	    connection_type = NET_TYPE_CLEAR;
 	} else if (!mystrcasecmp(desc.v.list[1].v.str, "SSL")) {
-	    connection_type = NET_TYPE_SSL;
-	    oklog("Creating SSL listener on port %d\n", newdesc.v.num);
+	    if (ctx) {
+		connection_type = NET_TYPE_SSL;
+		oklog("Creating SSL listener on port %d\n", newdesc.v.num);
+	    } else {
+		return E_TYPE;
+	    }
 	} else
 	    return E_TYPE;
 	if (!mystrcasecmp(desc.v.list[3].v.str, "TCP")) {
@@ -983,7 +998,10 @@ network_shutdown(void)
 	close_nlistener(all_nlisteners);
 
 #if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
-    SSL_CTX_free(ctx);
+    if (ctx) {
+	SSL_CTX_free(ctx);
+	ctx = NULL;
+    }
 #endif
 }
 
