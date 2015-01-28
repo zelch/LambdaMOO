@@ -25,6 +25,7 @@
 #endif
 
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 
 #if NDECL_ACCEPT
 extern int accept(int, struct sockaddr *, int *);
