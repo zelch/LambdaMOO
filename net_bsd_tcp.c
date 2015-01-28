@@ -132,6 +132,32 @@ proto_listen(int fd)
     return 1;
 }
 
+void
+proto_set_sockopts (int fd)
+{
+    int val;
+
+    val = 1;
+    setsockopt(fd, SOL_TCP, TCP_NODELAY, (char *) &val, sizeof(val));
+    /*
+     * Set keepalive, this is to help prevent connections from going idle for long periods of time.
+     * 60 seconds of idle before we start to probe.
+     * 45 seconds between probes.
+     * 20 probes.
+     *
+     * So if the connection is cut while active, it should take roughly 16
+     * minutes to die.
+     */
+    val = 1;
+    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
+    val = 60;
+    setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &val, sizeof(val));
+    val = 45;
+    setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &val, sizeof(val));
+    val = 20;
+    setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &val, sizeof(val));
+}
+
 enum proto_accept_error
 proto_accept_connection(int listener_fd, int *read_fd, int *write_fd,
 			const char **name)
@@ -159,6 +185,8 @@ proto_accept_connection(int listener_fd, int *read_fd, int *write_fd,
 		  lookup_name_from_addr(&address, timeout),
 		  (int) ntohs(address.sin6_port));
     *name = reset_stream(s);
+    proto_set_sockopts (fd);
+
     return PA_OKAY;
 }
 
@@ -290,6 +318,7 @@ proto_open_connection(Var arglist, int *read_fd, int *write_fd,
 
     stream_printf(st2, "%s, port %d", host_name, port);
     *remote_name = reset_stream(st2);
+    proto_set_sockopts (s);
 
     return E_NONE;
 }
