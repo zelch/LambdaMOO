@@ -316,8 +316,9 @@ pull_input(nhandle * h)
 {
     Stream *s = h->input;
     int count = 0;
-    char buffer[1024];
+    char buffer[1024] = { 0 };
     char *ptr, *end;
+    int more = 0;
 
 #if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
     if (h->connection_type == NET_TYPE_SSL) {
@@ -355,20 +356,25 @@ pull_input(nhandle * h)
 	    oklog("SSL: Cipher = %s\n", SSL_get_cipher(h->ssl));
 
 	    /* Not sure if I need this. */
-	    SSL_set_read_ahead(h->ssl, 1);
+	    /* It breaks things. */
+	    SSL_set_read_ahead(h->ssl, 0);
 	    return 1;
 	} else {
-	    count = SSL_read(h->ssl, buffer, sizeof(buffer));
+	    count = SSL_read(h->ssl, buffer, sizeof(buffer) - 1);
 
 	    if (count < 0) {
 		/* If the SSL connection wants more time, we'll try again
 		 * next time.
 		 */
-		if (SSL_get_error(h->ssl, count) == SSL_ERROR_WANT_READ)
-			return 1;
-		else
-		    errlog("SSL: OpenSSL: %.256s\n", ERR_error_string(ERR_get_error(), NULL));
+		int err = SSL_get_error(h->ssl, count);
+		if (err == SSL_ERROR_WANT_READ) {
+		    return 1;
+		} else
+		    errlog("SSL: OpenSSL: %d (%.256s)\n", err, ERR_error_string(ERR_get_error(), NULL));
 	    }
+
+	    if (SSL_pending(h->ssl) > 0)
+		more = 1;
 	}
     } else
 #endif
@@ -395,7 +401,10 @@ pull_input(nhandle * h)
 		h->last_input_was_CR = (c == '\r');
 	    }
 	}
-	return 1;
+	if (more)
+	    return pull_input(h);
+	else
+	    return 1;
     } else
 	return (count == 0 && !proto.believe_eof)
 	    || (count < 0 && (errno == eagain || errno == ewouldblock));
