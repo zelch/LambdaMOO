@@ -15,8 +15,8 @@
 #   Palo Alto, CA 94304
 #   Pavel@Xerox.Com
 
-if [ $# -lt 1 -o $# -gt 2 ]; then
-	echo 'Usage: restart dbase-prefix [port]'
+if [ $# -lt 1 -o $# -gt 3 ]; then
+	echo 'Usage: restart dbase-prefix port [SSL cert]'
 	exit 1
 fi
 
@@ -38,7 +38,11 @@ if [ -f $1.log ]; then
 fi
 
 echo `date`: RESTARTED >> $1.log
-nohup ./moo $1.db $1.db.new $2 >> $1.log 2>&1 &
+if [ -n "$3" ]; then
+	nohup ./moo $1.db $1.db.new -p $2 -c $3 >> $1.log 2>&1 &
+else
+	nohup ./moo $1.db $1.db.new $2 >> $1.log 2>&1 &
+fi
 
 ###############################################################################
 # $Log$
