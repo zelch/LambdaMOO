@@ -665,6 +665,35 @@ network_usage_string(void)
 }
 
 int
+load_certfile (void)
+{
+    int error = 0;
+
+    if (!certfile[0]) {
+	return 0;
+    }
+
+    if (SSL_CTX_use_certificate_chain_file(ctx, certfile) <= 0) {
+	errlog("SSL: failed to use certificate file!\n");
+	error = 1;
+    }
+    if (SSL_CTX_use_PrivateKey_file(ctx, certfile, SSL_FILETYPE_PEM) <= 0) {
+	errlog("SSL: failed to load private key!\n");
+	error = 1;
+    }
+    if (!SSL_CTX_check_private_key(ctx)) {
+	errlog("SSL: private key does not match the cert public key\n");
+	error = 1;
+    }
+
+    if (error) {
+	return 0;
+    }
+
+    return 1;
+}
+
+int
 network_initialize(int argc, char **argv, Var * desc)
 {
     if (!proto_initialize(&proto, desc, argc, argv))
@@ -684,8 +713,6 @@ network_initialize(int argc, char **argv, Var * desc)
     }
 
     if (certfile[0]) {
-	int error = 0;
-
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
 	ctx = SSL_CTX_new(TLS_server_method());
@@ -694,20 +721,8 @@ network_initialize(int argc, char **argv, Var * desc)
 	}
 	oklog("SSL: global context initialized\n");
 	SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_BOTH);
-	if (SSL_CTX_use_certificate_chain_file(ctx, certfile) <= 0) {
-	    errlog("SSL: failed to use certificate file!\n");
-	    error = 1;
-	}
-	if (SSL_CTX_use_PrivateKey_file(ctx, certfile, SSL_FILETYPE_PEM) <= 0) {
-	    errlog("SSL: failed to load private key!\n");
-	    error = 1;
-	}
-	if (!SSL_CTX_check_private_key(ctx)) {
-	    errlog("SSL: private key does not match the cert public key\n");
-	    error = 1;
-	}
 
-	if (error) {
+	if (!load_certfile()) {
 	    SSL_CTX_free(ctx);
 	    ctx = NULL;
 	}
