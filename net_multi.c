@@ -972,6 +972,7 @@ network_shutdown(void)
 void
 network_checkpoint(void)
 {
+    load_certfile();
 }
 
 char rcsid_net_multi[] = "$Id$";
