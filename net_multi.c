@@ -664,46 +664,6 @@ network_usage_string(void)
 #endif
 }
 
-#if NETWORK_PROTOCOL == NP_TCP && defined(USE_SSL)
-#ifndef NO_RSA
-static RSA *
-tmp_rsa_cb(SSL *s, int export, int keylength)
-{ /* temporary RSA key callback */
-    return rsa_tmp;
-}
-#endif /* NO_RSA */
-
-#ifndef NO_DH
-static DH *
-tmp_dh_cb(SSL *s, int export)
-{ /* temporary DH key callback */
-    static DH *dh_tmp = NULL;
-    BIO *in=NULL;
-
-    if(dh_tmp)
-	return(dh_tmp);
-    oklog("SSL: generating Diffie-Hellman key...\n");
-    in=BIO_new_file(certfile, "r");
-    if(in == NULL) {
-	errlog("SSL: DH could not read %s: %s\n", certfile, strerror(errno));
-	return(NULL);
-    }
-    dh_tmp=PEM_read_bio_DHparams(in, NULL, NULL, NULL);
-    if(dh_tmp==NULL) {
-	errlog("SSL: could not load DH parameters\n");
-	return(NULL);
-    }
-    if(!DH_generate_key(dh_tmp)) {
-	errlog("SSL: could not generate DH keys\n");
-	return(NULL);
-    }
-    oklog("SSL: Diffie-Hellman length: %d\n", DH_size(dh_tmp));
-    if(in != NULL) BIO_free(in);
-    return(dh_tmp);
-}
-#endif /* NO_DH */
-#endif
-
 int
 network_initialize(int argc, char **argv, Var * desc)
 {
@@ -752,26 +712,6 @@ network_initialize(int argc, char **argv, Var * desc)
 	    ctx = NULL;
 	}
     }
-#if 0
-#ifndef NO_RSA
-    oklog("SSL: generating %d bit temporary RSA key\n", KEYLENGTH);
-#if SSLEAY_VERSION_NUMBER <= 0x0800
-    rsa_tmp=RSA_generate_key(KEYLENGTH, RSA_F4, NULL);
-#else
-    rsa_tmp=RSA_generate_key(KEYLENGTH, RSA_F4, NULL, NULL);
-#endif
-    if (!rsa_tmp) {
-        errlog("SSL: couldn't generate temporary RSA key\n");
-    }
-    if (!SSL_CTX_set_tmp_rsa(ctx, rsa_tmp)) {
-	errlog("SSL: SSL_CTX_set_tmp_rsa\n");
-    }
-    SSL_CTX_set_tmp_rsa_callback(ctx, tmp_rsa_cb);
-#endif /* NO_RSA */
-#ifndef NO_DH
-    SSL_CTX_set_tmp_dh_callback(ctx, tmp_dh_cb);
-#endif /* NO_DH */
-#endif
 #endif /* USE_SSL */
 
     return 1;
