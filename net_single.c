@@ -47,6 +47,11 @@ network_usage_string(void)
     return "";
 }
 
+void
+network_checkpoint(void)
+{
+}
+
 int
 network_initialize(int argc, char **argv, Var * desc)
 {

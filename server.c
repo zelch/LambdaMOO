@@ -453,6 +453,7 @@ main_loop(void)
 	    run_server_task(-1, SYSTEM_OBJECT, "checkpoint_started",
 			    new_list(0), "", 0);
 	    network_process_io(0);
+	    network_checkpoint();
 #ifdef UNFORKED_CHECKPOINTS
 	    call_checkpoint_notifier(db_flush(FLUSH_ALL_NOW));
 #else

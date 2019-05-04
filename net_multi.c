@@ -969,6 +969,11 @@ network_shutdown(void)
 #endif
 }
 
+void
+network_checkpoint(void)
+{
+}
+
 char rcsid_net_multi[] = "$Id$";
 
 /* 

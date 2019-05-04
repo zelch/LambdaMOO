@@ -170,6 +170,12 @@ extern int network_process_io(int timeout);
 				 * timeout).
 				 */
 
+extern void network_checkpoint(void);
+				/* This is called prior to any checkpoints.
+				 * The network should run any 'maintenance' tasks now.
+				 * (Reloading SSL certs, reloading DNS settings, etc.)
+				 */
+
 extern const char *network_connection_name(network_handle nh);
 				/* Return some human-readable identification
 				 * for the specified connection.  It should fit
