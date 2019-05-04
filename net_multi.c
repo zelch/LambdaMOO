@@ -688,7 +688,7 @@ network_initialize(int argc, char **argv, Var * desc)
 
 	SSL_load_error_strings();
 	SSLeay_add_ssl_algorithms();
-	ctx = SSL_CTX_new(SSLv3_server_method());
+	ctx = SSL_CTX_new(TLS_server_method());
 	if (!ctx) {
 	    ERR_print_errors_fp(stderr);
 	}
